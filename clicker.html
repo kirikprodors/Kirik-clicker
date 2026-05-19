@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kirik Clicker</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #182533; /* Темная тема Telegram */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 80vh;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4ba3e3;
+        }
+
+        .balance-container {
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        /* Стиль кнопки-кликера */
+        #click-btn {
+            background: none;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        #click-btn:active {
+            transform: scale(0.9); /* Анимация уменьшения при клике */
+        }
+
+        #tomato-img {
+            width: 150px;
+            height: 150px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <header>
+            <h1 id="username">Загрузка...</h1>
+            <div class="balance-container">
+                <span id="balance">0</span> 🪙
+            </div>
+        </header>
+
+        <main>
+            <button id="click-btn">
+                <img src="https://img.icons8.com/emoji/96/tomato-emoji.png" alt="Tomato" id="tomato-img">
+            </button>
+        </main>
+    </div>
+
+    <script>
+        // Инициализируем Telegram Web App
+        const tg = window.Telegram.WebApp;
+
+        // Сообщаем Telegram, что интерфейс загрузился
+        tg.ready();
+        tg.expand(); // Разворачиваем приложение на максимум
+
+        // Находим элементы на странице
+        const usernameElement = document.getElementById('username');
+        const balanceElement = document.getElementById('balance');
+        const clickButton = document.getElementById('click-btn');
+
+        let score = 0;
+
+        // Получаем имя игрока прямо из его Telegram-профиля
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            usernameElement.innerText = tg.initDataUnsafe.user.first_name;
+        } else {
+            usernameElement.innerText = "Локальный игрок";
+        }
+
+        // Обработка клика
+        clickButton.addEventListener('click', () => {
+            score++;
+            balanceElement.innerText = score;
+            
+            // Легкий виброотклик на телефоне при каждом тапе
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        });
+    </script>
+</body>
+</html>
