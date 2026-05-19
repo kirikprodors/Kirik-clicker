@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Kirik Clicker</title>
-    
+    <title>Kirik Clicker Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -16,62 +14,161 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #182533; /* Темная тема Telegram */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135px, #111c24 0%, #1a3144 100%);
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .game-container {
-            text-align: center;
             width: 100%;
-            max-width: 400px;
-            padding: 20px;
+            max-width: 420px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            height: 95vh;
             justify-content: space-between;
-            height: 80vh;
+        }
+
+        header {
+            text-align: center;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 20px;
             color: #4ba3e3;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .balance-container {
-            font-size: 40px;
-            font-weight: bold;
+        .balance {
+            font-size: 36px;
+            font-weight: 900;
+            color: #f3c623;
+            text-shadow: 0 2px 8px rgba(243, 198, 35, 0.3);
         }
 
-        main {
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            font-size: 11px;
+            color: #a0b6c6;
+            margin-top: 5px;
+            background: rgba(0,0,0,0.2);
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .click-area {
             display: flex;
             justify-content: center;
             align-items: center;
             flex-grow: 1;
+            position: relative;
         }
 
-        /* Стиль кнопки-кликера */
         #click-btn {
             background: none;
             border: none;
             outline: none;
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.05s ease;
+            position: relative;
         }
 
         #click-btn:active {
-            transform: scale(0.9); /* Анимация уменьшения при клике */
+            transform: scale(0.92);
         }
 
         #tomato-img {
-            width: 150px;
-            height: 150px;
+            width: 160px;
+            height: 160px;
+            filter: drop-shadow(0 4px 15px rgba(255, 0, 0, 0.4));
+        }
+
+        .shop-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .shop-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-upgrade {
+            flex: 1;
+            background: linear-gradient(180px, #28a745 0%, #1e7e34 100%);
+            border: none;
+            border-bottom: 4px solid #145523;
+            border-radius: 10px;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-upgrade:disabled {
+            background: #495057;
+            border-bottom: 4px solid #2b2f33;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-upgrade span {
+            font-size: 10px;
+            font-weight: normal;
+            color: #e0e0e0;
+            margin-top: 2px;
+        }
+
+        .btn-rebirth {
+            background: linear-gradient(180px, #007bff 0%, #0056b3 100%);
+            border-bottom: 4px solid #003670;
+        }
+
+        .btn-super {
+            background: linear-gradient(180px, #dc3545 0%, #bd2130 100%);
+            border-bottom: 4px solid #7f161f;
+        }
+
+        /* Вылетающий текст клика */
+        .floating-text {
+            position: absolute;
+            color: #f3c623;
+            font-weight: 900;
+            font-size: 24px;
             pointer-events: none;
+            animation: floatUp 0.6s ease-out forwards;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
         }
     </style>
 </head>
@@ -79,51 +176,209 @@
 
     <div class="game-container">
         <header>
-            <h1 id="username">Загрузка...</h1>
-            <div class="balance-container">
-                <span id="balance">0</span> 🪙
+            <h1 id="username">Загрузка бойца...</h1>
+            <div class="balance"><span id="balance">0</span> 🪙</div>
+            <div class="stats-bar">
+                <div>Урон: <span id="stat-power">1</span> (x<span id="stat-bullets">1</span>)</div>
+                <div>Буст Р1: <span id="stat-mult">x1.00</span></div>
+                <div>Буст Р2: <span id="stat-smult">x1.0</span></div>
+            </div>
+            <div class="stats-bar" style="margin-top:3px;">
+                <div>Р1: <span id="stat-r1">0</span></div>
+                <div>Р2: <span id="stat-r2">0</span></div>
             </div>
         </header>
 
-        <main>
+        <div class="click-area">
             <button id="click-btn">
                 <img src="https://img.icons8.com/emoji/96/tomato-emoji.png" alt="Tomato" id="tomato-img">
             </button>
-        </main>
+        </div>
+
+        <div class="shop-container">
+            <div class="shop-row">
+                <button class="btn-upgrade" id="buy-mortis">
+                    Прокачать Мортиса
+                    <span id="mortis-cost">Цена: 10 🪙</span>
+                </button>
+                <button class="btn-upgrade" id="buy-shelly">
+                    Дробовик Шелли
+                    <span id="shelly-cost">Цена: 50 🪙</span>
+                </button>
+            </div>
+            <div class="shop-row">
+                <button class="btn-upgrade btn-rebirth" id="btn-rebirth1">
+                    Перерождение (Р1)
+                    <span id="r1-cost">Цена: 250 🪙</span>
+                </button>
+                <button class="btn-upgrade btn-super" id="btn-rebirth2">
+                    Супер Р2
+                    <span id="r2-cost">Цена: 5 Р1</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Инициализируем Telegram Web App
         const tg = window.Telegram.WebApp;
-
-        // Сообщаем Telegram, что интерфейс загрузился
         tg.ready();
-        tg.expand(); // Разворачиваем приложение на максимум
+        tg.expand();
 
-        // Находим элементы на странице
-        const usernameElement = document.getElementById('username');
-        const balanceElement = document.getElementById('balance');
-        const clickButton = document.getElementById('click-btn');
+        // Игровые переменные
+        let coins = 0;
+        let mortisLevel = 0; // Дает +1 к силе пули
+        let shellyLevel = 0; // Дает +1 к количеству пуль
+        
+        let rebirths = 0; 
+        let superRebirths = 0;
 
-        let score = 0;
+        let mortisBaseCost = 10;
+        let shellyBaseCost = 50;
+        let rebirthBaseCost = 250;
 
-        // Получаем имя игрока прямо из его Telegram-профиля
+        // Получение имени
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            usernameElement.innerText = tg.initDataUnsafe.user.first_name;
+            document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
         } else {
-            usernameElement.innerText = "Локальный игрок";
+            document.getElementById('username').innerText = "Кирик Боец";
         }
 
-        // Обработка клика
-        clickButton.addEventListener('click', () => {
-            score++;
-            balanceElement.innerText = score;
+        // Формулы расчетов
+        function getBulletPower() { return 1 + mortisLevel; }
+        function getBulletCount() { return 1 + shellyLevel; }
+        
+        function getMortisCost() { return mortisBaseCost * Math.pow(2, mortisLevel); }
+        function getShellyCost() { return shellyBaseCost * Math.pow(2, shellyLevel); }
+        function getRebirthCost() { return rebirthBaseCost * Math.pow(2, rebirths); }
+
+        // Расчет множителя от обычных перерождений
+        function getRebirthMultiplier() {
+            if (rebirths === 0) return 1;
+            // Каждое Р2 сверх 5 увеличивает эффективность Р1 на +0.1 к шагу множителя
+            let superBonusStep = 0.005;
+            if (superRebirths > 0) {
+                // Если накоплено перерождений больше 5, рассчитываем супер-бонус
+                let extraRebirths = Math.max(0, (superRebirths + 5) - 5); 
+                superBonusStep += (extraRebirths * 0.1) * 0.005;
+            }
             
-            // Легкий виброотклик на телефоне при каждом тапе
+            // Считаем сколько монет накоплено сверх цены текущего перерождения
+            let currentCost = getRebirthCost();
+            let extraCoins = Math.max(0, coins - currentCost);
+            
+            return 1 + (rebirths * 0.5) + (extraCoins * superBonusStep);
+        }
+
+        function getSuperRebirthMultiplier() {
+            if (superRebirths === 0) return 1.0;
+            return 1.0 + (superRebirths * 0.1);
+        }
+
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(coins);
+            document.getElementById('stat-power').innerText = getBulletPower();
+            document.getElementById('stat-bullets').innerText = getBulletCount();
+            document.getElementById('stat-r1').innerText = rebirths;
+            document.getElementById('stat-r2').innerText = superRebirths;
+            
+            let rMult = getRebirthMultiplier();
+            let sMult = getSuperRebirthMultiplier();
+            document.getElementById('stat-mult').innerText = "x" + rMult.toFixed(2);
+            document.getElementById('stat-smult').innerText = "x" + sMult.toFixed(1);
+
+            // Кнопки и цены
+            let mCost = getMortisCost();
+            document.getElementById('mortis-cost').innerText = "Цена: " + mCost + " 🪙";
+            document.getElementById('buy-mortis').disabled = (coins < mCost);
+
+            let sCost = getShellyCost();
+            document.getElementById('shelly-cost').innerText = "Цена: " + sCost + " 🪙";
+            document.getElementById('buy-shelly').disabled = (coins < sCost);
+
+            let rCost = getRebirthCost();
+            document.getElementById('r1-cost').innerText = "Цена: " + rCost + " 🪙";
+            document.getElementById('btn-rebirth1').disabled = (coins < rCost);
+
+            document.getElementById('btn-rebirth2').disabled = (rebirths < 5);
+        }
+
+        // Клик по Томату
+        const clickBtn = document.getElementById('click-btn');
+        clickBtn.addEventListener('click', (e) => {
+            // Главная формула расчета клика (Пули * Сила * Множители)
+            let clickValue = getBulletCount() * getBulletPower() * getRebirthMultiplier() * getSuperRebirthMultiplier();
+            coins += clickValue;
+
+            // Анимация вылетающих цифр
+            createFloatingText(e.clientX, e.clientY, "+" + Math.floor(clickValue));
+
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
             }
+            updateUI();
         });
+
+        function createFloatingText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            // Если координаты не определились (клик с клавиатуры), ставим центр
+            el.style.left = (x || window.innerWidth / 2) + 'px';
+            el.style.top = (y || window.innerHeight / 2) + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
+
+        // Магазин: Мортис
+        document.getElementById('buy-mortis').addEventListener('click', () => {
+            let cost = getMortisCost();
+            if (coins >= cost) {
+                coins -= cost;
+                mortisLevel++;
+                updateUI();
+            }
+        });
+
+        // Магазин: Шелли
+        document.getElementById('buy-shelly').addEventListener('click', () => {
+            let cost = getShellyCost();
+            if (coins >= cost) {
+                coins -= cost;
+                shellyLevel++;
+                updateUI();
+            }
+        });
+
+        // Обычное перерождение (Р1)
+        document.getElementById('btn-rebirth1').addEventListener('click', () => {
+            let cost = getRebirthCost();
+            if (coins >= cost) {
+                rebirths++;
+                // Полный сброс прогресса
+                coins = 0;
+                mortisLevel = 0;
+                shellyLevel = 0;
+                updateUI();
+            }
+        });
+
+        // Супер перерождение (Р2)
+        document.getElementById('btn-rebirth2').addEventListener('click', () => {
+            if (rebirths >= 5) {
+                superRebirths++;
+                rebirths -= 5; // Списываем 5 обычных перерождений
+                
+                // Полный жесткий сброс всего
+                coins = 0;
+                mortisLevel = 0;
+                shellyLevel = 0;
+                updateUI();
+            }
+        });
+
+        // Первый запуск
+        updateUI();
     </script>
 </body>
 </html>
