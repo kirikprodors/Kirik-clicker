@@ -3,172 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Kirik Clicker Pro</title>
+    <title>Kirik Gem Clicker</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --brawl-blue: linear-gradient(180deg, #4ba3e3 0%, #2a6db0 100%);
+            --brawl-green: linear-gradient(180deg, #57d53b 0%, #308a1c 100%);
+            --brawl-yellow: linear-gradient(180deg, #f3c623 0%, #b8860b 100%);
+            --brawl-red: linear-gradient(180deg, #f54e4e 0%, #a31a1a 100%);
+            --brawl-purple: linear-gradient(180deg, #a55eea 0%, #6c3483 100%);
+            --dark-bg: #0d1a26;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135px, #111c24 0%, #1a3144 100%);
+            font-family: 'Arial Black', 'Rubik', sans-serif;
+            background: radial-gradient(circle, #1b3a57 0%, #0d1a26 100%);
             color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .game-container {
             width: 100%;
-            max-width: 420px;
-            padding: 15px;
+            max-width: 450px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 95vh;
-            justify-content: space-between;
+            padding: 20px;
+            height: 100%;
+            position: relative;
         }
 
+        /* Шапка */
         header {
             text-align: center;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
         }
 
-        header h1 {
-            font-size: 20px;
+        #username {
+            font-size: 18px;
             color: #4ba3e3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .balance {
-            font-size: 36px;
-            font-weight: 900;
+        .balance-box {
+            font-size: 42px;
             color: #f3c623;
-            text-shadow: 0 2px 8px rgba(243, 198, 35, 0.3);
-        }
-
-        .stats-bar {
+            text-shadow: 2px 4px 0px #634a00;
             display: flex;
-            justify-content: space-around;
-            width: 100%;
-            font-size: 11px;
-            color: #a0b6c6;
-            margin-top: 5px;
-            background: rgba(0,0,0,0.2);
-            padding: 4px;
-            border-radius: 6px;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
+        .balance-box img { width: 35px; }
+
+        /* Зона клика */
         .click-area {
+            flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-grow: 1;
             position: relative;
         }
 
-        #click-btn {
+        #gem-btn {
             background: none;
             border: none;
-            outline: none;
             cursor: pointer;
-            transition: transform 0.05s ease;
-            position: relative;
+            transition: transform 0.05s;
         }
 
-        #click-btn:active {
-            transform: scale(0.92);
+        #gem-btn:active { transform: scale(0.9); }
+
+        #gem-img {
+            width: 220px;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 127, 0.5));
         }
 
-        #tomato-img {
-            width: 160px;
-            height: 160px;
-            filter: drop-shadow(0 4px 15px rgba(255, 0, 0, 0.4));
-        }
-
-        .shop-container {
-            width: 100%;
+        /* Футер с кнопками */
+        footer {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 12px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 15px;
+            margin-top: 20px;
         }
 
-        .shop-row {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .btn-upgrade {
+        .nav-btn {
             flex: 1;
-            background: linear-gradient(180px, #28a745 0%, #1e7e34 100%);
+            padding: 15px;
+            border-radius: 15px;
             border: none;
-            border-bottom: 4px solid #145523;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-bottom: 5px solid rgba(0,0,0,0.3);
+            text-shadow: 1px 2px 2px rgba(0,0,0,0.5);
+        }
+
+        .shop-btn { background: var(--brawl-blue); }
+        .rebirth-nav-btn { background: var(--brawl-purple); }
+
+        /* Окна (Модалки) */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 15, 30, 0.95);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            padding: 25px;
+            border-radius: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title { font-size: 24px; color: #f3c623; }
+
+        .close-btn {
+            background: var(--brawl-red);
+            border: none;
+            width: 40px; height: 40px;
             border-radius: 10px;
             color: white;
-            padding: 10px;
             font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Списки в магазине */
+        .shop-list {
             display: flex;
             flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .upgrade-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border-left: 5px solid #4ba3e3;
         }
 
-        .btn-upgrade:disabled {
-            background: #495057;
-            border-bottom: 4px solid #2b2f33;
-            opacity: 0.6;
-            cursor: not-allowed;
+        .upgrade-info h3 { font-size: 16px; margin-bottom: 5px; color: #fff; }
+        .upgrade-info p { font-size: 12px; color: #a0b6c6; }
+
+        .buy-btn {
+            background: var(--brawl-green);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            border-bottom: 3px solid #145523;
         }
 
-        .btn-upgrade span {
-            font-size: 10px;
-            font-weight: normal;
-            color: #e0e0e0;
-            margin-top: 2px;
+        .buy-btn:disabled {
+            background: #444; border-bottom: 3px solid #222; opacity: 0.5;
         }
 
-        .btn-rebirth {
-            background: linear-gradient(180px, #007bff 0%, #0056b3 100%);
-            border-bottom: 4px solid #003670;
+        /* Секция перерождений */
+        .rebirth-stats {
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
-        .btn-super {
-            background: linear-gradient(180px, #dc3545 0%, #bd2130 100%);
-            border-bottom: 4px solid #7f161f;
+        .rebirth-stats b { color: #f3c623; }
+
+        .boost-preview {
+            background: rgba(165, 94, 234, 0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px dashed #a55eea;
+            color: #d1b2ff;
+            text-align: center;
         }
 
-        /* Вылетающий текст клика */
+        /* Анимация клика */
         .floating-text {
             position: absolute;
             color: #f3c623;
-            font-weight: 900;
-            font-size: 24px;
+            font-weight: bold;
+            font-size: 28px;
             pointer-events: none;
-            animation: floatUp 0.6s ease-out forwards;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            animation: floatMove 0.7s ease-out forwards;
+            text-shadow: 2px 2px 0px #000;
         }
 
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+        @keyframes floatMove {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
         }
     </style>
 </head>
@@ -176,45 +229,78 @@
 
     <div class="game-container">
         <header>
-            <h1 id="username">Загрузка бойца...</h1>
-            <div class="balance"><span id="balance">0</span> 🪙</div>
-            <div class="stats-bar">
-                <div>Урон: <span id="stat-power">1</span> (x<span id="stat-bullets">1</span>)</div>
-                <div>Буст Р1: <span id="stat-mult">x1.00</span></div>
-                <div>Буст Р2: <span id="stat-smult">x1.0</span></div>
-            </div>
-            <div class="stats-bar" style="margin-top:3px;">
-                <div>Р1: <span id="stat-r1">0</span></div>
-                <div>Р2: <span id="stat-r2">0</span></div>
+            <div id="username">ЗАГРУЗКА...</div>
+            <div class="balance-box">
+                <img src="https://raw.githubusercontent.com/Kirikprodors/Kirik-clicker/main/gem.png" onerror="this.src='https://img.icons8.com/color/96/gem.png'">
+                <span id="balance">0</span>
             </div>
         </header>
 
         <div class="click-area">
-            <button id="click-btn">
-                <img src="https://img.icons8.com/emoji/96/tomato-emoji.png" alt="Tomato" id="tomato-img">
+            <button id="gem-btn">
+                <img id="gem-img" src="https://img.icons8.com/color/240/gem.png">
             </button>
         </div>
 
-        <div class="shop-container">
-            <div class="shop-row">
-                <button class="btn-upgrade" id="buy-mortis">
-                    Прокачать Мортиса
-                    <span id="mortis-cost">Цена: 10 🪙</span>
-                </button>
-                <button class="btn-upgrade" id="buy-shelly">
-                    Дробовик Шелли
-                    <span id="shelly-cost">Цена: 50 🪙</span>
-                </button>
+        <footer>
+            <button class="nav-btn shop-btn" onclick="openModal('shop-modal')">Магазин</button>
+            <button class="nav-btn rebirth-nav-btn" onclick="openModal('rebirth-modal')">Перерождения</button>
+        </footer>
+
+        <div id="shop-modal" class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">МАГАЗИН</h2>
+                <button class="close-btn" onclick="closeModal('shop-modal')">X</button>
             </div>
-            <div class="shop-row">
-                <button class="btn-upgrade btn-rebirth" id="btn-rebirth1">
-                    Перерождение (Р1)
-                    <span id="r1-cost">Цена: 250 🪙</span>
-                </button>
-                <button class="btn-upgrade btn-super" id="btn-rebirth2">
-                    Супер Р2
-                    <span id="r2-cost">Цена: 5 Р1</span>
-                </button>
+            <div class="shop-list">
+                <div class="upgrade-card">
+                    <div class="upgrade-info">
+                        <h3>Мортис</h3>
+                        <p>Урон пули +1</p>
+                    </div>
+                    <button id="buy-mortis" class="buy-btn" onclick="buyUpgrade('mortis')">10</button>
+                </div>
+                <div class="upgrade-card" style="border-left-color: #f54e4e;">
+                    <div class="upgrade-info">
+                        <h3>Шелли</h3>
+                        <p>Доп. пуля за клик</p>
+                    </div>
+                    <button id="buy-shelly" class="buy-btn" onclick="buyUpgrade('shelly')">50</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="rebirth-modal" class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">ПЕРЕРОЖДЕНИЕ</h2>
+                <button class="close-btn" onclick="closeModal('rebirth-modal')">X</button>
+            </div>
+            <div class="rebirth-stats">
+                <p>Твои Р1: <b id="stat-r1">0</b></p>
+                <p>Твои Р2: <b id="stat-r2">0</b></p>
+                <p>Множитель Р1: <b id="stat-m1">x1.00</b></p>
+                <p>Множитель Р2: <b id="stat-m2">x1.0</b></p>
+                
+                <div class="boost-preview" id="boost-text">
+                    Набери 250 монет для буста!
+                </div>
+            </div>
+            
+            <div class="shop-list">
+                <div class="upgrade-card" style="border-left-color: #a55eea;">
+                    <div class="upgrade-info">
+                        <h3>Обычное Р1</h3>
+                        <p>Сброс за множитель</p>
+                    </div>
+                    <button id="btn-rebirth1" class="buy-btn" onclick="doRebirth(1)">250</button>
+                </div>
+                <div class="upgrade-card" style="border-left-color: #dc3545;">
+                    <div class="upgrade-info">
+                        <h3>Супер Р2</h3>
+                        <p>Цена: 5 Р1</p>
+                    </div>
+                    <button id="btn-rebirth2" class="buy-btn" onclick="doRebirth(2)">5 Р1</button>
+                </div>
             </div>
         </div>
     </div>
@@ -224,160 +310,107 @@
         tg.ready();
         tg.expand();
 
-        // Игровые переменные
         let coins = 0;
-        let mortisLevel = 0; // Дает +1 к силе пули
-        let shellyLevel = 0; // Дает +1 к количеству пуль
-        
-        let rebirths = 0; 
-        let superRebirths = 0;
+        let mortis = 0;
+        let shelly = 0;
+        let r1 = 0;
+        let r2 = 0;
 
-        let mortisBaseCost = 10;
-        let shellyBaseCost = 50;
-        let rebirthBaseCost = 250;
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; updateUI(); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // Получение имени
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
-        } else {
-            document.getElementById('username').innerText = "Кирик Боец";
-        }
+        // Расчеты
+        const getCost = (base, lvl) => base * Math.pow(2, lvl);
+        const getR1Cost = () => 250 * Math.pow(2, r1);
 
-        // Формулы расчетов
-        function getBulletPower() { return 1 + mortisLevel; }
-        function getBulletCount() { return 1 + shellyLevel; }
-        
-        function getMortisCost() { return mortisBaseCost * Math.pow(2, mortisLevel); }
-        function getShellyCost() { return shellyBaseCost * Math.pow(2, shellyLevel); }
-        function getRebirthCost() { return rebirthBaseCost * Math.pow(2, rebirths); }
-
-        // Расчет множителя от обычных перерождений
-        function getRebirthMultiplier() {
-            if (rebirths === 0) return 1;
-            // Каждое Р2 сверх 5 увеличивает эффективность Р1 на +0.1 к шагу множителя
-            let superBonusStep = 0.005;
-            if (superRebirths > 0) {
-                // Если накоплено перерождений больше 5, рассчитываем супер-бонус
-                let extraRebirths = Math.max(0, (superRebirths + 5) - 5); 
-                superBonusStep += (extraRebirths * 0.1) * 0.005;
-            }
+        function getR1Multiplier() {
+            if (r1 === 0) return 1;
+            let step = 0.005;
+            if (r2 > 0) step += (r2 * 0.1) * 0.005; 
             
-            // Считаем сколько монет накоплено сверх цены текущего перерождения
-            let currentCost = getRebirthCost();
-            let extraCoins = Math.max(0, coins - currentCost);
-            
-            return 1 + (rebirths * 0.5) + (extraCoins * superBonusStep);
+            let extra = Math.max(0, coins - getR1Cost());
+            return 1 + (r1 * 0.5) + (extra * step);
         }
 
-        function getSuperRebirthMultiplier() {
-            if (superRebirths === 0) return 1.0;
-            return 1.0 + (superRebirths * 0.1);
-        }
+        function getR2Multiplier() { return 1 + (r2 * 0.1); }
 
-        // Обновление интерфейса
         function updateUI() {
             document.getElementById('balance').innerText = Math.floor(coins);
-            document.getElementById('stat-power').innerText = getBulletPower();
-            document.getElementById('stat-bullets').innerText = getBulletCount();
-            document.getElementById('stat-r1').innerText = rebirths;
-            document.getElementById('stat-r2').innerText = superRebirths;
             
-            let rMult = getRebirthMultiplier();
-            let sMult = getSuperRebirthMultiplier();
-            document.getElementById('stat-mult').innerText = "x" + rMult.toFixed(2);
-            document.getElementById('stat-smult').innerText = "x" + sMult.toFixed(1);
+            // Магазин
+            const mCost = getCost(10, mortis);
+            const sCost = getCost(50, shelly);
+            document.getElementById('buy-mortis').innerText = mCost;
+            document.getElementById('buy-mortis').disabled = coins < mCost;
+            document.getElementById('buy-shelly').innerText = sCost;
+            document.getElementById('buy-shelly').disabled = coins < sCost;
 
-            // Кнопки и цены
-            let mCost = getMortisCost();
-            document.getElementById('mortis-cost').innerText = "Цена: " + mCost + " 🪙";
-            document.getElementById('buy-mortis').disabled = (coins < mCost);
+            // Перерождения
+            const r1Cost = getR1Cost();
+            document.getElementById('stat-r1').innerText = r1;
+            document.getElementById('stat-r2').innerText = r2;
+            document.getElementById('stat-m1').innerText = "x" + getR1Multiplier().toFixed(2);
+            document.getElementById('stat-m2').innerText = "x" + getR2Multiplier().toFixed(1);
+            
+            document.getElementById('btn-rebirth1').innerText = r1Cost;
+            document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
+            document.getElementById('btn-rebirth2').disabled = r1 < 5;
 
-            let sCost = getShellyCost();
-            document.getElementById('shelly-cost').innerText = "Цена: " + sCost + " 🪙";
-            document.getElementById('buy-shelly').disabled = (coins < sCost);
-
-            let rCost = getRebirthCost();
-            document.getElementById('r1-cost').innerText = "Цена: " + rCost + " 🪙";
-            document.getElementById('btn-rebirth1').disabled = (coins < rCost);
-
-            document.getElementById('btn-rebirth2').disabled = (rebirths < 5);
+            // Текст буста
+            const boostVal = (Math.max(0, coins - r1Cost) * (0.005 + (r2 * 0.1 * 0.005))).toFixed(3);
+            document.getElementById('boost-text').innerHTML = `При Р1 ты получишь <br><b>+${boostVal}</b> к мультиплееру!`;
+            
+            if (tg.initDataUnsafe?.user) {
+                document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+            } else {
+                document.getElementById('username').innerText = "ИГРОК";
+            }
         }
 
-        // Клик по Томату
-        const clickBtn = document.getElementById('click-btn');
-        clickBtn.addEventListener('click', (e) => {
-            // Главная формула расчета клика (Пули * Сила * Множители)
-            let clickValue = getBulletCount() * getBulletPower() * getRebirthMultiplier() * getSuperRebirthMultiplier();
-            coins += clickValue;
+        // Клик
+        document.getElementById('gem-btn').onclick = (e) => {
+            let val = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
+            coins += val;
+            
+            const txt = document.createElement('div');
+            txt.className = 'floating-text';
+            txt.innerText = "+" + Math.floor(val);
+            txt.style.left = e.clientX + "px";
+            txt.style.top = e.clientY + "px";
+            document.body.appendChild(txt);
+            setTimeout(() => txt.remove(), 700);
 
-            // Анимация вылетающих цифр
-            createFloatingText(e.clientX, e.clientY, "+" + Math.floor(clickValue));
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            updateUI();
+        };
 
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
+        function buyUpgrade(type) {
+            if (type === 'mortis') {
+                let c = getCost(10, mortis);
+                if (coins >= c) { coins -= c; mortis++; }
+            } else {
+                let c = getCost(50, shelly);
+                if (coins >= c) { coins -= c; shelly++; }
             }
             updateUI();
-        });
-
-        function createFloatingText(x, y, text) {
-            const el = document.createElement('div');
-            el.className = 'floating-text';
-            el.innerText = text;
-            // Если координаты не определились (клик с клавиатуры), ставим центр
-            el.style.left = (x || window.innerWidth / 2) + 'px';
-            el.style.top = (y || window.innerHeight / 2) + 'px';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 600);
         }
 
-        // Магазин: Мортис
-        document.getElementById('buy-mortis').addEventListener('click', () => {
-            let cost = getMortisCost();
-            if (coins >= cost) {
-                coins -= cost;
-                mortisLevel++;
-                updateUI();
+        function doRebirth(type) {
+            if (type === 1) {
+                let c = getR1Cost();
+                if (coins >= c) {
+                    r1++; coins = 0; mortis = 0; shelly = 0;
+                    closeModal('rebirth-modal');
+                }
+            } else {
+                if (r1 >= 5) {
+                    r2++; r1 -= 5; coins = 0; mortis = 0; shelly = 0;
+                    closeModal('rebirth-modal');
+                }
             }
-        });
+            updateUI();
+        }
 
-        // Магазин: Шелли
-        document.getElementById('buy-shelly').addEventListener('click', () => {
-            let cost = getShellyCost();
-            if (coins >= cost) {
-                coins -= cost;
-                shellyLevel++;
-                updateUI();
-            }
-        });
-
-        // Обычное перерождение (Р1)
-        document.getElementById('btn-rebirth1').addEventListener('click', () => {
-            let cost = getRebirthCost();
-            if (coins >= cost) {
-                rebirths++;
-                // Полный сброс прогресса
-                coins = 0;
-                mortisLevel = 0;
-                shellyLevel = 0;
-                updateUI();
-            }
-        });
-
-        // Супер перерождение (Р2)
-        document.getElementById('btn-rebirth2').addEventListener('click', () => {
-            if (rebirths >= 5) {
-                superRebirths++;
-                rebirths -= 5; // Списываем 5 обычных перерождений
-                
-                // Полный жесткий сброс всего
-                coins = 0;
-                mortisLevel = 0;
-                shellyLevel = 0;
-                updateUI();
-            }
-        });
-
-        // Первый запуск
         updateUI();
     </script>
 </body>
