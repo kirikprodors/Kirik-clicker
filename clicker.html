@@ -42,7 +42,6 @@
             position: relative;
         }
 
-        /* Шапка игры */
         header {
             text-align: center;
             background: rgba(0, 0, 0, 0.4);
@@ -50,6 +49,7 @@
             border-radius: 20px;
             border: 3px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
+            position: relative;
         }
 
         #username {
@@ -57,7 +57,14 @@
             color: #4ba3e3;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+        }
+
+        #app-version {
+            font-size: 10px;
+            color: #718da4;
+            margin-bottom: 8px;
+            font-family: sans-serif;
         }
 
         .balance-box {
@@ -70,14 +77,12 @@
             gap: 10px;
         }
 
-        /* Твоя новая картинка гема в балансе */
         .balance-box img { 
             width: 35px; 
             height: 35px;
             border-radius: 8px;
         }
 
-        /* Кликер */
         .click-area {
             flex-grow: 1;
             display: flex;
@@ -98,7 +103,6 @@
             transform: scale(0.9); 
         }
 
-        /* Твоя новая основная картинка гема для кликов */
         #gem-img {
             width: 220px;
             height: 220px;
@@ -107,7 +111,6 @@
             filter: drop-shadow(0 0 25px rgba(0, 255, 127, 0.6));
         }
 
-        /* Кнопки меню */
         footer {
             display: flex;
             gap: 15px;
@@ -131,7 +134,6 @@
         .shop-btn { background: var(--brawl-blue); }
         .rebirth-nav-btn { background: var(--brawl-purple); }
 
-        /* Всплывающие окна */
         .modal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -163,7 +165,6 @@
             cursor: pointer;
         }
 
-        /* Карточки в Магазине */
         .shop-list {
             display: flex;
             flex-direction: column;
@@ -189,7 +190,7 @@
             border: none;
             padding: 12px 20px;
             border-radius: 12px;
-            color: #ffffff !important; /* Жёстко фиксируем белый цвет текста */
+            color: #ffffff !important;
             font-weight: bold;
             font-size: 14px;
             border-bottom: 4px solid #145523;
@@ -204,7 +205,6 @@
             cursor: not-allowed;
         }
 
-        /* Окно Перерождений */
         .rebirth-stats {
             background: rgba(0,0,0,0.5);
             padding: 15px;
@@ -228,7 +228,6 @@
             font-size: 13px;
         }
 
-        /* Вылетающие цифры клика */
         .floating-text {
             position: absolute;
             color: #f3c623;
@@ -251,6 +250,7 @@
     <div class="game-container">
         <header>
             <div id="username">ЗАГРУЗКА...</div>
+            <div id="app-version">Версия: 1.1.0</div>
             <div class="balance-box">
                 <img src="https://i.pinimg.com/736x/d7/ff/e0/d7ffe0cfb53b47edf78fd096ec33050c.jpg">
                 <span id="balance">0</span>
@@ -299,7 +299,7 @@
             <div class="rebirth-stats">
                 <p>Твои обычные перерождения (Р1): <b id="stat-r1">0</b></p>
                 <p>Твои супер перерождения (Р2): <b id="stat-r2">0</b></p>
-                <p>Общий множитель Р1: <b id="stat-m1">x1.00</b></p>
+                <p>Постоянный множитель Р1: <b id="stat-m1">x1.00</b></p>
                 <p>Общий множитель Р2: <b id="stat-m2">x1.0</b></p>
                 
                 <div class="boost-preview" id="boost-text">
@@ -336,6 +336,8 @@
         let shelly = 0;
         let r1 = 0;
         let r2 = 0;
+        
+        let extraRebirthBonus = 0; 
 
         function openModal(id) { 
             document.getElementById(id).style.display = 'flex'; 
@@ -346,20 +348,12 @@
             document.getElementById(id).style.display = 'none'; 
         }
 
-        // Прямые неоптимизированные функции расчетов
         function getMortisCost() { return 10 * Math.pow(2, mortis); }
         function getShellyCost() { return 50 * Math.pow(2, shelly); }
         function getR1Cost() { return 250 * Math.pow(2, r1); }
 
         function getR1Multiplier() {
-            if (r1 === 0) return 1;
-            let step = 0.005;
-            if (r2 > 0) {
-                step += (r2 * 0.1) * 0.005; 
-            }
-            let extra = coins - getR1Cost();
-            if (extra < 0) extra = 0;
-            return 1 + (r1 * 0.5) + (extra * step);
+            return 1 + (r1 * 0.5) + extraRebirthBonus;
         }
 
         function getR2Multiplier() { 
@@ -367,10 +361,8 @@
         }
 
         function updateUI() {
-            // Обновляем монеты
             document.getElementById('balance').innerText = Math.floor(coins);
             
-            // Цены и доступность в магазине
             let mCost = getMortisCost();
             let sCost = getShellyCost();
             document.getElementById('buy-mortis').innerText = mCost;
@@ -378,7 +370,6 @@
             document.getElementById('buy-shelly').innerText = sCost;
             document.getElementById('buy-shelly').disabled = coins < sCost;
 
-            // Статистика перерождений
             let r1Cost = getR1Cost();
             document.getElementById('stat-r1').innerText = r1;
             document.getElementById('stat-r2').innerText = r2;
@@ -389,29 +380,31 @@
             document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
             document.getElementById('btn-rebirth2').disabled = r1 < 5;
 
-            // Расчет будущего буста
             let currentStep = 0.005;
             if (r2 > 0) currentStep += (r2 * 0.1) * 0.005;
             let extraCoins = coins - r1Cost;
             if (extraCoins < 0) extraCoins = 0;
             let boostVal = (extraCoins * currentStep).toFixed(3);
             
-            document.getElementById('boost-text').innerHTML = `При текущем перерождении твой аккаунт получит буст:<br><b>+${boostVal}</b> к мультиплееру за лишние монеты!`;
+            document.getElementById('boost-text').innerHTML = `Если переродишься сейчас, получишь:<br><b>+${boostVal}</b> к мультиплееру после сброса!`;
             
-            // Имя игрока из ТГ
+            // Получение имени аккаунта из Telegram
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+                let user = tg.initDataUnsafe.user;
+                let fullName = user.first_name;
+                if (user.last_name) {
+                    fullName += " " + user.last_name;
+                }
+                document.getElementById('username').innerText = fullName;
             } else {
                 document.getElementById('username').innerText = "КИРИК ИГРОК";
             }
         }
 
-        // Логика клика по гему
         document.getElementById('gem-btn').onclick = function(e) {
             let power = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
             coins += power;
             
-            // Создаем текст клика
             let txt = document.createElement('div');
             txt.className = 'floating-text';
             txt.innerText = "+" + Math.floor(power);
@@ -426,49 +419,45 @@
             updateUI();
         };
 
-        // Покупка апгрейдов
         function buyUpgrade(type) {
             if (type === 'mortis') {
                 let cost = getMortisCost();
-                if (coins >= cost) { 
-                    coins -= cost; 
-                    mortis++; 
-                }
+                if (coins >= cost) { coins -= cost; mortis++; }
             } else if (type === 'shelly') {
                 let cost = getShellyCost();
-                if (coins >= cost) { 
-                    coins -= cost; 
-                    shelly++; 
-                }
+                if (coins >= cost) { coins -= cost; shelly++; }
             }
             updateUI();
         }
 
-        // Проведение перерождений
         function doRebirth(type) {
             if (type === 1) {
                 let cost = getR1Cost();
                 if (coins >= cost) {
+                    let currentStep = 0.005;
+                    if (r2 > 0) currentStep += (r2 * 0.1) * 0.005;
+                    let extraCoins = coins - cost;
+                    if (extraCoins < 0) extraCoins = 0;
+                    
+                    // Увеличение мультиплеера происходит строго ЗДЕСЬ, в момент перерождения
+                    extraRebirthBonus += (extraCoins * currentStep);
+                    
                     r1++; 
-                    coins = 0; 
-                    mortis = 0; 
-                    shelly = 0;
+                    coins = 0; mortis = 0; shelly = 0;
                     closeModal('rebirth-modal');
                 }
             } else if (type === 2) {
                 if (r1 >= 5) {
                     r2++; 
                     r1 -= 5; 
-                    coins = 0; 
-                    mortis = 0; 
-                    shelly = 0;
+                    coins = 0; mortis = 0; shelly = 0;
+                    extraRebirthBonus = 0; 
                     closeModal('rebirth-modal');
                 }
             }
             updateUI();
         }
 
-        // Первичная отрисовка игры
         updateUI();
     </script>
 </body>
