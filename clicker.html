@@ -144,6 +144,11 @@
             border-radius: 20px;
         }
 
+        /* Класс активации окна */
+        .modal.active {
+            display: flex !important;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -249,7 +254,7 @@
     <div class="game-container">
         <header>
             <div id="username">ЗАГРУЗКА...</div>
-            <div id="app-version">Версия: 1.2.0</div>
+            <div id="app-version">Версия: 1.2.1</div>
             <div class="balance-box">
                 <img src="https://i.pinimg.com/736x/d7/ff/e0/d7ffe0cfb53b47edf78fd096ec33050c.jpg">
                 <span id="balance">0</span>
@@ -337,11 +342,18 @@
         let r1 = 0;
         let r2 = 0;
         
-        // Накопленные честные бонусы за сбросы
         let extraRebirthBonusR1 = 0; 
         let extraRebirthBonusR2 = 0;
 
-        // Новая линейная логика цен (каждый раз +базовая цена)
+        function openModal(id) { 
+            document.getElementById(id).classList.add('active'); 
+            updateUI(); 
+        }
+        
+        function closeModal(id) { 
+            document.getElementById(id).classList.remove('active'); 
+        }
+
         function getMortisCost() { return 10 + (mortis * 10); }
         function getShellyCost() { return 50 + (shelly * 50); }
         function getR1Cost() { return 500 + (r1 * 500); }
@@ -374,7 +386,6 @@
             document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
             document.getElementById('btn-rebirth2').disabled = r1 < 5;
 
-            // Расчет будущего буста для Р1 (Лимит +2.00)
             let currentStepR1 = 0.005;
             if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
             let extraCoinsR1 = coins - r1Cost;
@@ -387,10 +398,9 @@
                 document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1 при сбросе: <b>+${calculatedBoostR1.toFixed(3)}</b>`;
             }
 
-            // Расчет будущего буста для Супер Р2 (Лимит +2.00)
             let extraR1 = r1 - 5;
             if (extraR1 < 0) extraR1 = 0;
-            let calculatedBoostR2 = extraR1 * 0.05; // За каждый лишний Р1 даем +0.05 к Р2 множителю
+            let calculatedBoostR2 = extraR1 * 0.05;
             
             if (calculatedBoostR2 > 2.0) {
                 document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2: <b>+2.000</b> (Максимум!)`;
@@ -411,7 +421,6 @@
         }
 
         document.getElementById('gem-btn').onclick = function(e) {
-            // Исправлен баг: урон теперь жестко округляется до целого числа, никаких скрытых дробей в клике!
             let rawPower = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
             let exactPower = Math.floor(rawPower);
             if (exactPower < 1) exactPower = 1;
@@ -453,7 +462,7 @@
                     if (extraCoinsR1 < 0) extraCoinsR1 = 0;
                     
                     let boostToAdd = extraCoinsR1 * currentStepR1;
-                    if (boostToAdd > 2.0) boostToAdd = 2.0; // Ограничение не более x2 за раз
+                    if (boostToAdd > 2.0) boostToAdd = 2.0; 
                     
                     extraRebirthBonusR1 += boostToAdd;
                     
@@ -467,14 +476,14 @@
                     if (extraR1 < 0) extraR1 = 0;
                     
                     let boostToAddR2 = extraR1 * 0.05;
-                    if (boostToAddR2 > 2.0) boostToAddR2 = 2.0; // Ограничение не более x2 для супер сброса
+                    if (boostToAddR2 > 2.0) boostToAddR2 = 2.0; 
                     
                     extraRebirthBonusR2 += boostToAddR2;
                     
                     r2++; 
-                    r1 = 0; // Сбрасываем обычные Р1
+                    r1 = 0; 
                     coins = 0; mortis = 0; shelly = 0;
-                    extraRebirthBonusR1 = 0; // Обычный бонус обнуляется
+                    extraRebirthBonusR1 = 0; 
                     closeModal('rebirth-modal');
                 }
             }
