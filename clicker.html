@@ -49,7 +49,6 @@
             border-radius: 20px;
             border: 3px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
-            position: relative;
         }
 
         #username {
@@ -210,22 +209,22 @@
             padding: 15px;
             border-radius: 15px;
             margin-bottom: 20px;
-            font-size: 15px;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.5;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .rebirth-stats b { color: #f3c623; }
 
         .boost-preview {
-            background: rgba(165, 94, 234, 0.2);
-            padding: 12px;
+            background: rgba(165, 94, 234, 0.15);
+            padding: 10px;
             border-radius: 10px;
-            margin-top: 12px;
-            border: 2px dashed #a55eea;
+            margin-top: 10px;
+            border: 1px dashed #a55eea;
             color: #d1b2ff;
-            text-align: center;
-            font-size: 13px;
+            text-align: left;
+            font-size: 12px;
         }
 
         .floating-text {
@@ -250,7 +249,7 @@
     <div class="game-container">
         <header>
             <div id="username">ЗАГРУЗКА...</div>
-            <div id="app-version">Версия: 1.1.0</div>
+            <div id="app-version">Версия: 1.2.0</div>
             <div class="balance-box">
                 <img src="https://i.pinimg.com/736x/d7/ff/e0/d7ffe0cfb53b47edf78fd096ec33050c.jpg">
                 <span id="balance">0</span>
@@ -297,13 +296,14 @@
                 <button class="close-btn" onclick="closeModal('rebirth-modal')">X</button>
             </div>
             <div class="rebirth-stats">
-                <p>Твои обычные перерождения (Р1): <b id="stat-r1">0</b></p>
-                <p>Твои супер перерождения (Р2): <b id="stat-r2">0</b></p>
-                <p>Постоянный множитель Р1: <b id="stat-m1">x1.00</b></p>
-                <p>Общий множитель Р2: <b id="stat-m2">x1.0</b></p>
+                <p>Обычные перерождения (Р1): <b id="stat-r1">0</b></p>
+                <p>Супер перерождения (Р2): <b id="stat-r2">0</b></p>
+                <p>Множитель Р1: <b id="stat-m1">x1.00</b></p>
+                <p>Множитель Р2: <b id="stat-m2">x1.00</b></p>
                 
-                <div class="boost-preview" id="boost-text">
-                    Набери 250 монет для буста!
+                <div class="boost-preview">
+                    <div id="boost-text-r1">Р1 буст: Загрузка...</div>
+                    <div id="boost-text-r2" style="margin-top: 5px; color: #ffb2b2;">Р2 буст: Загрузка...</div>
                 </div>
             </div>
             
@@ -311,14 +311,14 @@
                 <div class="upgrade-card" style="border-left-color: #a55eea;">
                     <div class="upgrade-info">
                         <h3>Обычное Р1</h3>
-                        <p>Сброс монет и уровней</p>
+                        <p>Сброс монет и бравлеров</p>
                     </div>
-                    <button id="btn-rebirth1" class="buy-btn" onclick="doRebirth(1)">250</button>
+                    <button id="btn-rebirth1" class="buy-btn" onclick="doRebirth(1)">500</button>
                 </div>
                 <div class="upgrade-card" style="border-left-color: #dc3545;">
                     <div class="upgrade-info">
                         <h3>Супер Р2</h3>
-                        <p>Требуется: 5 обычных Р1</p>
+                        <p>Требуется: 5 штук Р1</p>
                     </div>
                     <button id="btn-rebirth2" class="buy-btn" onclick="doRebirth(2)">5 Р1</button>
                 </div>
@@ -337,27 +337,21 @@
         let r1 = 0;
         let r2 = 0;
         
-        let extraRebirthBonus = 0; 
+        // Накопленные честные бонусы за сбросы
+        let extraRebirthBonusR1 = 0; 
+        let extraRebirthBonusR2 = 0;
 
-        function openModal(id) { 
-            document.getElementById(id).style.display = 'flex'; 
-            updateUI(); 
-        }
-        
-        function closeModal(id) { 
-            document.getElementById(id).style.display = 'none'; 
-        }
-
-        function getMortisCost() { return 10 * Math.pow(2, mortis); }
-        function getShellyCost() { return 50 * Math.pow(2, shelly); }
-        function getR1Cost() { return 250 * Math.pow(2, r1); }
+        // Новая линейная логика цен (каждый раз +базовая цена)
+        function getMortisCost() { return 10 + (mortis * 10); }
+        function getShellyCost() { return 50 + (shelly * 50); }
+        function getR1Cost() { return 500 + (r1 * 500); }
 
         function getR1Multiplier() {
-            return 1 + (r1 * 0.5) + extraRebirthBonus;
+            return 1 + (r1 * 0.5) + extraRebirthBonusR1;
         }
 
         function getR2Multiplier() { 
-            return 1 + (r2 * 0.1); 
+            return 1 + (r2 * 0.1) + extraRebirthBonusR2; 
         }
 
         function updateUI() {
@@ -374,21 +368,36 @@
             document.getElementById('stat-r1').innerText = r1;
             document.getElementById('stat-r2').innerText = r2;
             document.getElementById('stat-m1').innerText = "x" + getR1Multiplier().toFixed(2);
-            document.getElementById('stat-m2').innerText = "x" + getR2Multiplier().toFixed(1);
+            document.getElementById('stat-m2').innerText = "x" + getR2Multiplier().toFixed(2);
             
             document.getElementById('btn-rebirth1').innerText = r1Cost;
             document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
             document.getElementById('btn-rebirth2').disabled = r1 < 5;
 
-            let currentStep = 0.005;
-            if (r2 > 0) currentStep += (r2 * 0.1) * 0.005;
-            let extraCoins = coins - r1Cost;
-            if (extraCoins < 0) extraCoins = 0;
-            let boostVal = (extraCoins * currentStep).toFixed(3);
+            // Расчет будущего буста для Р1 (Лимит +2.00)
+            let currentStepR1 = 0.005;
+            if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
+            let extraCoinsR1 = coins - r1Cost;
+            if (extraCoinsR1 < 0) extraCoinsR1 = 0;
+            let calculatedBoostR1 = extraCoinsR1 * currentStepR1;
             
-            document.getElementById('boost-text').innerHTML = `Если переродишься сейчас, получишь:<br><b>+${boostVal}</b> к мультиплееру после сброса!`;
+            if (calculatedBoostR1 > 2.0) {
+                document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1: <b>+2.000</b> (Максимум!)`;
+            } else {
+                document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1 при сбросе: <b>+${calculatedBoostR1.toFixed(3)}</b>`;
+            }
+
+            // Расчет будущего буста для Супер Р2 (Лимит +2.00)
+            let extraR1 = r1 - 5;
+            if (extraR1 < 0) extraR1 = 0;
+            let calculatedBoostR2 = extraR1 * 0.05; // За каждый лишний Р1 даем +0.05 к Р2 множителю
             
-            // Получение имени аккаунта из Telegram
+            if (calculatedBoostR2 > 2.0) {
+                document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2: <b>+2.000</b> (Максимум!)`;
+            } else {
+                document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2 при сбросе: <b>+${calculatedBoostR2.toFixed(2)}</b>`;
+            }
+            
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 let user = tg.initDataUnsafe.user;
                 let fullName = user.first_name;
@@ -402,12 +411,16 @@
         }
 
         document.getElementById('gem-btn').onclick = function(e) {
-            let power = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
-            coins += power;
+            // Исправлен баг: урон теперь жестко округляется до целого числа, никаких скрытых дробей в клике!
+            let rawPower = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
+            let exactPower = Math.floor(rawPower);
+            if (exactPower < 1) exactPower = 1;
+
+            coins += exactPower;
             
             let txt = document.createElement('div');
             txt.className = 'floating-text';
-            txt.innerText = "+" + Math.floor(power);
+            txt.innerText = "+" + exactPower;
             txt.style.left = e.clientX + "px";
             txt.style.top = e.clientY + "px";
             document.body.appendChild(txt);
@@ -434,13 +447,15 @@
             if (type === 1) {
                 let cost = getR1Cost();
                 if (coins >= cost) {
-                    let currentStep = 0.005;
-                    if (r2 > 0) currentStep += (r2 * 0.1) * 0.005;
-                    let extraCoins = coins - cost;
-                    if (extraCoins < 0) extraCoins = 0;
+                    let currentStepR1 = 0.005;
+                    if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
+                    let extraCoinsR1 = coins - cost;
+                    if (extraCoinsR1 < 0) extraCoinsR1 = 0;
                     
-                    // Увеличение мультиплеера происходит строго ЗДЕСЬ, в момент перерождения
-                    extraRebirthBonus += (extraCoins * currentStep);
+                    let boostToAdd = extraCoinsR1 * currentStepR1;
+                    if (boostToAdd > 2.0) boostToAdd = 2.0; // Ограничение не более x2 за раз
+                    
+                    extraRebirthBonusR1 += boostToAdd;
                     
                     r1++; 
                     coins = 0; mortis = 0; shelly = 0;
@@ -448,10 +463,18 @@
                 }
             } else if (type === 2) {
                 if (r1 >= 5) {
+                    let extraR1 = r1 - 5;
+                    if (extraR1 < 0) extraR1 = 0;
+                    
+                    let boostToAddR2 = extraR1 * 0.05;
+                    if (boostToAddR2 > 2.0) boostToAddR2 = 2.0; // Ограничение не более x2 для супер сброса
+                    
+                    extraRebirthBonusR2 += boostToAddR2;
+                    
                     r2++; 
-                    r1 -= 5; 
+                    r1 = 0; // Сбрасываем обычные Р1
                     coins = 0; mortis = 0; shelly = 0;
-                    extraRebirthBonus = 0; 
+                    extraRebirthBonusR1 = 0; // Обычный бонус обнуляется
                     closeModal('rebirth-modal');
                 }
             }
