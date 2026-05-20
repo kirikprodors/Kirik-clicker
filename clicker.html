@@ -144,7 +144,6 @@
             border-radius: 20px;
         }
 
-        /* Класс активации окна */
         .modal.active {
             display: flex !important;
         }
@@ -247,14 +246,53 @@
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
         }
+
+        /* Контейнер и стили для плавных уведомлений */
+        .toast-container {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast-alert {
+            background: var(--brawl-red);
+            border: 3px solid #ffffff;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+            padding: 12px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            text-align: center;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 0px #000;
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .toast-alert.info-alert {
+            background: var(--brawl-green);
+        }
+
+        .toast-alert.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
 
     <div class="game-container">
+        <div id="toast-box" class="toast-container"></div>
+
         <header>
             <div id="username">ЗАГРУЗКА...</div>
-            <div id="app-version">Версия: 1.2.1</div>
+            <div id="app-version">Версия: 1.3.0</div>
             <div class="balance-box">
                 <img src="https://i.pinimg.com/736x/d7/ff/e0/d7ffe0cfb53b47edf78fd096ec33050c.jpg">
                 <span id="balance">0</span>
@@ -345,6 +383,35 @@
         let extraRebirthBonusR1 = 0; 
         let extraRebirthBonusR2 = 0;
 
+        // Триггеры, чтобы уведомление о цене срабатывало один раз за круг
+        let alertCostR1Triggered = false;
+        let alertCostR2Triggered = false;
+
+        // Тайм-ауты для защиты от спама уведомлений лимита
+        let lastLimitAlertTimeR1 = 0;
+        let lastLimitAlertTimeR2 = 0;
+
+        // Функция плавного показа уведомлений
+        function showNotification(text, type = "error") {
+            const container = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+            toast.className = 'toast-alert';
+            if (type === "info") {
+                toast.className += ' info-alert';
+            }
+            toast.innerText = text;
+            container.appendChild(toast);
+
+            // Плавное появление
+            setTimeout(() => { toast.classList.add('show'); }, 50);
+
+            // Плавное исчезновение через 3 секунды
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => { toast.remove(); }, 400);
+            }, 3000);
+        }
+
         function openModal(id) { 
             document.getElementById(id).classList.add('active'); 
             updateUI(); 
@@ -386,24 +453,49 @@
             document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
             document.getElementById('btn-rebirth2').disabled = r1 < 5;
 
+            // Оповещение о достижении нужной цены на обычное перерождение
+            if (coins >= r1Cost && !alertCostR1Triggered) {
+                showNotification(`Достигнута цена перерождения Р1 (${r1Cost} монет)!`, "info");
+                alertCostR1Triggered = true;
+            }
+
+            // Оповещение о готовности супер перерождения
+            if (r1 >= 5 && !alertCostR2Triggered) {
+                showNotification("У тебя накопилось 5 Р1! Доступно Супер перерождение!", "info");
+                alertCostR2Triggered = true;
+            }
+
+            // Расчет будущего буста для Р1
             let currentStepR1 = 0.005;
             if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
             let extraCoinsR1 = coins - r1Cost;
             if (extraCoinsR1 < 0) extraCoinsR1 = 0;
             let calculatedBoostR1 = extraCoinsR1 * currentStepR1;
             
-            if (calculatedBoostR1 > 2.0) {
+            let now = Date.now();
+            if (calculatedBoostR1 >= 2.0) {
                 document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1: <b>+2.000</b> (Максимум!)`;
+                // Оповещение о лимите Р1 (не чаще раза в 5 секунд)
+                if (now - lastLimitAlertTimeR1 > 5000) {
+                    showNotification("Вы достигли лимита бонуса, переродитесь!");
+                    lastLimitAlertTimeR1 = now;
+                }
             } else {
                 document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1 при сбросе: <b>+${calculatedBoostR1.toFixed(3)}</b>`;
             }
 
+            // Расчет будущего буста для Супер Р2
             let extraR1 = r1 - 5;
             if (extraR1 < 0) extraR1 = 0;
             let calculatedBoostR2 = extraR1 * 0.05;
             
-            if (calculatedBoostR2 > 2.0) {
+            if (calculatedBoostR2 >= 2.0) {
                 document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2: <b>+2.000</b> (Максимум!)`;
+                // Оповещение о лимите Р2 (не чаще раза в 5 секунд)
+                if (now - lastLimitAlertTimeR2 > 5000) {
+                    showNotification("Вы достигли лимита бонуса, переродитесь!");
+                    lastLimitAlertTimeR2 = now;
+                }
             } else {
                 document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2 при сбросе: <b>+${calculatedBoostR2.toFixed(2)}</b>`;
             }
@@ -468,6 +560,7 @@
                     
                     r1++; 
                     coins = 0; mortis = 0; shelly = 0;
+                    alertCostR1Triggered = false; // Сбрасываем триггер для следующего круга
                     closeModal('rebirth-modal');
                 }
             } else if (type === 2) {
@@ -484,6 +577,8 @@
                     r1 = 0; 
                     coins = 0; mortis = 0; shelly = 0;
                     extraRebirthBonusR1 = 0; 
+                    alertCostR1Triggered = false;
+                    alertCostR2Triggered = false; // Сбрасываем супер триггер
                     closeModal('rebirth-modal');
                 }
             }
