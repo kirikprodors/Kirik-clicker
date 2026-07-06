@@ -374,14 +374,15 @@
         tg.ready();
         tg.expand();
 
-        let coins = 0;
-        let mortis = 0;
-        let shelly = 0;
-        let r1 = 0;
-        let r2 = 0;
-        
-        let extraRebirthBonusR1 = 0; 
-        let extraRebirthBonusR2 = 0;
+                let gameState = {
+            coins: 0,
+            mortis: 0,
+            shelly: 0,
+            r1: 0,
+            r2: 0,
+            extraRebirthBonusR1: 0,
+            extraRebirthBonusR2: 0
+        };
 
         // Триггеры, чтобы уведомление о цене срабатывало один раз за круг
         let alertCostR1Triggered = false;
@@ -412,6 +413,24 @@
             }, 3000);
         }
 
+                function saveGame() {
+            tg.CloudStorage.setItem('kirik_save', JSON.stringify(gameState), (err, res) => {
+                if (err) console.error("Save failed", err);
+            });
+        }
+
+        function loadGame() {
+            tg.CloudStorage.getItem('kirik_save', (err, val) => {
+                if (!err && val) {
+                    try {
+                        const parsed = JSON.parse(val);
+                        gameState = { ...gameState, ...parsed };
+                    } catch (e) { console.error("Parse error", e); }
+                }
+                updateUI();
+            });
+        }
+
         function openModal(id) { 
             document.getElementById(id).classList.add('active'); 
             updateUI(); 
@@ -421,61 +440,60 @@
             document.getElementById(id).classList.remove('active'); 
         }
 
-        function getMortisCost() { return 10 + (mortis * 10); }
-        function getShellyCost() { return 50 + (shelly * 50); }
-        function getR1Cost() { return 500 + (r1 * 500); }
+        function getMortisCost() { return 10 + (gameState.mortis * 10); }
+        function getShellyCost() { return 50 + (gameState.shelly * 50); }
+        function getR1Cost() { return 500 + (gameState.r1 * 500); }
 
         function getR1Multiplier() {
-            return 1 + (r1 * 0.5) + extraRebirthBonusR1;
+            return 1 + (gameState.r1 * 0.5) + gameState.extraRebirthBonusR1;
         }
 
         function getR2Multiplier() { 
-            return 1 + (r2 * 0.1) + extraRebirthBonusR2; 
+            return 1 + (gameState.r2 * 0.1) + gameState.extraRebirthBonusR2; 
         }
 
         function updateUI() {
-            document.getElementById('balance').innerText = Math.floor(coins);
+            document.getElementById('balance').innerText = Math.floor(gameState.coins);
             
             let mCost = getMortisCost();
             let sCost = getShellyCost();
             document.getElementById('buy-mortis').innerText = mCost;
-            document.getElementById('buy-mortis').disabled = coins < mCost;
+            document.getElementById('buy-mortis').disabled = gameState.coins < mCost;
             document.getElementById('buy-shelly').innerText = sCost;
-            document.getElementById('buy-shelly').disabled = coins < sCost;
+            document.getElementById('buy-shelly').disabled = gameState.coins < sCost;
 
             let r1Cost = getR1Cost();
-            document.getElementById('stat-r1').innerText = r1;
-            document.getElementById('stat-r2').innerText = r2;
+            document.getElementById('stat-r1').innerText = gameState.r1;
+            document.getElementById('stat-r2').innerText = gameState.r2;
             document.getElementById('stat-m1').innerText = "x" + getR1Multiplier().toFixed(2);
             document.getElementById('stat-m2').innerText = "x" + getR2Multiplier().toFixed(2);
             
             document.getElementById('btn-rebirth1').innerText = r1Cost;
-            document.getElementById('btn-rebirth1').disabled = coins < r1Cost;
-            document.getElementById('btn-rebirth2').disabled = r1 < 5;
+            document.getElementById('btn-rebirth1').disabled = gameState.coins < r1Cost;
+            document.getElementById('btn-rebirth2').disabled = gameState.r1 < 5;
 
             // Оповещение о достижении нужной цены на обычное перерождение
-            if (coins >= r1Cost && !alertCostR1Triggered) {
+            if (gameState.coins >= r1Cost && !alertCostR1Triggered) {
                 showNotification(`Достигнута цена перерождения Р1 (${r1Cost} монет)!`, "info");
                 alertCostR1Triggered = true;
             }
 
             // Оповещение о готовности супер перерождения
-            if (r1 >= 5 && !alertCostR2Triggered) {
+            if (gameState.r1 >= 5 && !alertCostR2Triggered) {
                 showNotification("У тебя накопилось 5 Р1! Доступно Супер перерождение!", "info");
                 alertCostR2Triggered = true;
             }
 
             // Расчет будущего буста для Р1
             let currentStepR1 = 0.005;
-            if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
-            let extraCoinsR1 = coins - r1Cost;
+            if (gameState.r2 > 0) currentStepR1 += (gameState.r2 * 0.1) * 0.005;
+            let extraCoinsR1 = gameState.coins - r1Cost;
             if (extraCoinsR1 < 0) extraCoinsR1 = 0;
             let calculatedBoostR1 = extraCoinsR1 * currentStepR1;
             
             let now = Date.now();
             if (calculatedBoostR1 >= 2.0) {
                 document.getElementById('boost-text-r1').innerHTML = `⚡ Буст Р1: <b>+2.000</b> (Максимум!)`;
-                // Оповещение о лимите Р1 (не чаще раза в 5 секунд)
                 if (now - lastLimitAlertTimeR1 > 5000) {
                     showNotification("Вы достигли лимита бонуса, переродитесь!");
                     lastLimitAlertTimeR1 = now;
@@ -485,13 +503,12 @@
             }
 
             // Расчет будущего буста для Супер Р2
-            let extraR1 = r1 - 5;
+            let extraR1 = gameState.r1 - 5;
             if (extraR1 < 0) extraR1 = 0;
             let calculatedBoostR2 = extraR1 * 0.05;
             
             if (calculatedBoostR2 >= 2.0) {
                 document.getElementById('boost-text-r2').innerHTML = `⭐ Буст Р2: <b>+2.000</b> (Максимум!)`;
-                // Оповещение о лимите Р2 (не чаще раза в 5 секунд)
                 if (now - lastLimitAlertTimeR2 > 5000) {
                     showNotification("Вы достигли лимита бонуса, переродитесь!");
                     lastLimitAlertTimeR2 = now;
@@ -512,12 +529,12 @@
             }
         }
 
-        document.getElementById('gem-btn').onclick = function(e) {
-            let rawPower = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
+                document.getElementById('gem-btn').onclick = function(e) {
+            let rawPower = (1 + gameState.mortis) * (1 + gameState.shelly) * getR1Multiplier() * getR2Multiplier();
             let exactPower = Math.floor(rawPower);
             if (exactPower < 1) exactPower = 1;
 
-            coins += exactPower;
+            gameState.coins += exactPower;
             
             let txt = document.createElement('div');
             txt.className = 'floating-text';
@@ -531,61 +548,64 @@
                 tg.HapticFeedback.impactOccurred('medium');
             }
             updateUI();
+            saveGame();
         };
 
         function buyUpgrade(type) {
             if (type === 'mortis') {
                 let cost = getMortisCost();
-                if (coins >= cost) { coins -= cost; mortis++; }
+                if (gameState.coins >= cost) { gameState.coins -= cost; gameState.mortis++; }
             } else if (type === 'shelly') {
                 let cost = getShellyCost();
-                if (coins >= cost) { coins -= cost; shelly++; }
+                if (gameState.coins >= cost) { gameState.coins -= cost; gameState.shelly++; }
             }
             updateUI();
+            saveGame();
         }
 
         function doRebirth(type) {
             if (type === 1) {
                 let cost = getR1Cost();
-                if (coins >= cost) {
+                if (gameState.coins >= cost) {
                     let currentStepR1 = 0.005;
-                    if (r2 > 0) currentStepR1 += (r2 * 0.1) * 0.005;
-                    let extraCoinsR1 = coins - cost;
+                    if (gameState.r2 > 0) currentStepR1 += (gameState.r2 * 0.1) * 0.005;
+                    let extraCoinsR1 = gameState.coins - cost;
                     if (extraCoinsR1 < 0) extraCoinsR1 = 0;
                     
                     let boostToAdd = extraCoinsR1 * currentStepR1;
                     if (boostToAdd > 2.0) boostToAdd = 2.0; 
                     
-                    extraRebirthBonusR1 += boostToAdd;
+                    gameState.extraRebirthBonusR1 += boostToAdd;
                     
-                    r1++; 
-                    coins = 0; mortis = 0; shelly = 0;
-                    alertCostR1Triggered = false; // Сбрасываем триггер для следующего круга
+                    gameState.r1++; 
+                    gameState.coins = 0; gameState.mortis = 0; gameState.shelly = 0;
+                    alertCostR1Triggered = false;
                     closeModal('rebirth-modal');
                 }
             } else if (type === 2) {
-                if (r1 >= 5) {
-                    let extraR1 = r1 - 5;
+                if (gameState.r1 >= 5) {
+                    let extraR1 = gameState.r1 - 5;
                     if (extraR1 < 0) extraR1 = 0;
                     
                     let boostToAddR2 = extraR1 * 0.05;
                     if (boostToAddR2 > 2.0) boostToAddR2 = 2.0; 
                     
-                    extraRebirthBonusR2 += boostToAddR2;
+                    gameState.extraRebirthBonusR2 += boostToAddR2;
                     
-                    r2++; 
-                    r1 = 0; 
-                    coins = 0; mortis = 0; shelly = 0;
-                    extraRebirthBonusR1 = 0; 
+                    gameState.r2++; 
+                    gameState.r1 = 0; 
+                    gameState.coins = 0; gameState.mortis = 0; gameState.shelly = 0;
+                    gameState.extraRebirthBonusR1 = 0; 
                     alertCostR1Triggered = false;
-                    alertCostR2Triggered = false; // Сбрасываем супер триггер
+                    alertCostR2Triggered = false;
                     closeModal('rebirth-modal');
                 }
             }
             updateUI();
+            saveGame();
         }
 
-        updateUI();
+        loadGame();
     </script>
 </body>
 </html>
