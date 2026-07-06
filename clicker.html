@@ -305,9 +305,10 @@
             </button>
         </div>
 
-        <footer>
+                <footer>
             <button class="nav-btn shop-btn" onclick="openModal('shop-modal')">Магазин</button>
             <button class="nav-btn rebirth-nav-btn" onclick="openModal('rebirth-modal')">Перерождения</button>
+            <button class="nav-btn" style="background: #444;" onclick="saveGame(true)">💾</button>
         </footer>
 
         <div id="shop-modal" class="modal">
@@ -413,14 +414,14 @@
             }, 3000);
         }
 
-                        function saveGame() {
+                                function saveGame(showToast = false) {
             const dataToSave = JSON.stringify(gameState);
-            console.log("Saving to CloudStorage:", dataToSave);
             tg.CloudStorage.setItem('kirik_save', dataToSave, (err, res) => {
                 if (err) {
                     console.error("Save failed", err);
+                    if (showToast) showNotification("Ошибка сохранения!");
                 } else {
-                    console.log("Save successful:", res);
+                    if (showToast) showNotification("Прогресс сохранен!", "info");
                 }
             });
         }
