@@ -340,19 +340,19 @@
                 <button class="close-btn" onclick="closeModal('shop-modal')">X</button>
             </div>
             <div class="shop-list">
-                <div class="upgrade-card">
+                                <div class="upgrade-card">
                     <div class="upgrade-info">
-                        <h3>Мортис</h3>
-                        <p>Урон пули +1</p>
+                        <h3>Больше гемов</h3>
+                        <p>Улучшает гемы на +1</p>
                     </div>
-                    <button id="buy-mortis" class="buy-btn" onclick="buyUpgrade('mortis')">10</button>
+                    <button id="buy-moreGems" class="buy-btn" onclick="buyUpgrade('moreGems')">10</button>
                 </div>
                 <div class="upgrade-card" style="border-left-color: #f54e4e;">
                     <div class="upgrade-info">
-                        <h3>Шелли</h3>
-                        <p>Доп. пуля за клик</p>
+                        <h3>Мульти-гемы</h3>
+                        <p>Дают сразу 2 гема за клик</p>
                     </div>
-                    <button id="buy-shelly" class="buy-btn" onclick="buyUpgrade('shelly')">50</button>
+                    <button id="buy-multiGems" class="buy-btn" onclick="buyUpgrade('multiGems')">50</button>
                 </div>
             </div>
         </div>
@@ -398,9 +398,9 @@
         tg.ready();
         tg.expand();
 
-        let coins = 0;
-        let mortis = 0;
-        let shelly = 0;
+                let coins = 0;
+        let moreGems = 0;
+        let multiGems = 0;
         let r1 = 0;
         let r2 = 0;
         
@@ -445,8 +445,8 @@
             document.getElementById(id).classList.remove('active'); 
         }
 
-        function getMortisCost() { return 10 + (mortis * 10); }
-        function getShellyCost() { return 50 + (shelly * 50); }
+                function getMoreGemsCost() { return 10 + (moreGems * 10); }
+        function getMultiGemsCost() { return 50 + (multiGems * 50); }
         function getR1Cost() { return 500 + (r1 * 500); }
 
         function getR1Multiplier() {
@@ -457,15 +457,15 @@
             return 1 + (r2 * 0.1) + extraRebirthBonusR2; 
         }
 
-        function updateUI() {
+                function updateUI() {
             document.getElementById('balance').innerText = Math.floor(coins);
             
-            let mCost = getMortisCost();
-            let sCost = getShellyCost();
-            document.getElementById('buy-mortis').innerText = mCost;
-            document.getElementById('buy-mortis').disabled = coins < mCost;
-            document.getElementById('buy-shelly').innerText = sCost;
-            document.getElementById('buy-shelly').disabled = coins < sCost;
+            let mCost = getMoreGemsCost();
+            let sCost = getMultiGemsCost();
+            document.getElementById('buy-moreGems').innerText = mCost;
+            document.getElementById('buy-moreGems').disabled = coins < mCost;
+            document.getElementById('buy-multiGems').innerText = sCost;
+            document.getElementById('buy-multiGems').disabled = coins < sCost;
 
             let r1Cost = getR1Cost();
             document.getElementById('stat-r1').innerText = r1;
@@ -539,11 +539,11 @@
                 let lastCloudSaveTime = 0;
         const CLOUD_SAVE_INTERVAL = 5000; // Троттлинг сохранения в облако при тапах (раз в 5 сек)
 
-        function saveProgress(forceCloud = false) {
+                function saveProgress(forceCloud = false) {
             const saveData = {
                 coins: coins,
-                mortis: mortis,
-                shelly: shelly,
+                moreGems: moreGems,
+                multiGems: multiGems,
                 r1: r1,
                 r2: r2,
                 extraRebirthBonusR1: extraRebirthBonusR1,
@@ -631,11 +631,11 @@
             }
         }
 
-        function applyLoadedData(data) {
+                function applyLoadedData(data) {
             if (data) {
                 if (typeof data.coins === 'number') coins = data.coins;
-                if (typeof data.mortis === 'number') mortis = data.mortis;
-                if (typeof data.shelly === 'number') shelly = data.shelly;
+                if (typeof data.moreGems === 'number') moreGems = data.moreGems;
+                if (typeof data.multiGems === 'number') multiGems = data.multiGems;
                 if (typeof data.r1 === 'number') r1 = data.r1;
                 if (typeof data.r2 === 'number') r2 = data.r2;
                 if (typeof data.extraRebirthBonusR1 === 'number') extraRebirthBonusR1 = data.extraRebirthBonusR1;
@@ -644,44 +644,53 @@
             }
         }
 
-        document.getElementById('gem-btn').onclick = function(e) {
-            let rawPower = (1 + mortis) * (1 + shelly) * getR1Multiplier() * getR2Multiplier();
+                document.getElementById('gem-btn').onclick = function(e) {
+            let rawPower = (1 + moreGems) * (1 + (multiGems * 2)) * getR1Multiplier() * getR2Multiplier();
             let exactPower = Math.floor(rawPower);
             if (exactPower < 1) exactPower = 1;
 
             coins += exactPower;
             
-            let txt = document.createElement('div');
-            txt.className = 'floating-text';
-            txt.innerText = "+" + exactPower;
-            txt.style.left = e.clientX + "px";
-            txt.style.top = e.clientY + "px";
-            document.body.appendChild(txt);
-            setTimeout(function() { txt.remove(); }, 700);
+            const spawnFloatingText = (val, x, y, delay = 0) => {
+                setTimeout(() => {
+                    let txt = document.createElement('div');
+                    txt.className = 'floating-text';
+                    txt.innerText = "+" + val;
+                    txt.style.left = (x + (Math.random() * 40 - 20)) + "px";
+                    txt.style.top = (y - 50) + "px";
+                    document.body.appendChild(txt);
+                    setTimeout(() => txt.remove(), 700);
+                }, delay);
+            };
+
+            spawnFloatingText(exactPower, e.clientX, e.clientY);
+            if (multiGems > 0) {
+                spawnFloatingText(exactPower, e.clientX + 30, e.clientY, 100);
+            }
 
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
             updateUI();
-            saveProgress(false); // Автосохранение с троттлингом при тапах
+            saveProgress(false);
         };
 
         function buyUpgrade(type) {
-            if (type === 'mortis') {
-                let cost = getMortisCost();
+            if (type === 'moreGems') {
+                let cost = getMoreGemsCost();
                 if (coins >= cost) { 
                     coins -= cost; 
-                    mortis++; 
+                    moreGems++; 
                     updateUI();
-                    saveProgress(true); // Мгновенное принудительное сохранение в облако
+                    saveProgress(true);
                 }
-            } else if (type === 'shelly') {
-                let cost = getShellyCost();
+            } else if (type === 'multiGems') {
+                let cost = getMultiGemsCost();
                 if (coins >= cost) { 
                     coins -= cost; 
-                    shelly++; 
+                    multiGems++; 
                     updateUI();
-                    saveProgress(true); // Мгновенное принудительное сохранение в облако
+                    saveProgress(true);
                 }
             }
         }
@@ -701,7 +710,7 @@
                     extraRebirthBonusR1 += boostToAdd;
                     
                     r1++; 
-                    coins = 0; mortis = 0; shelly = 0;
+                    coins = 0; moreGems = 0; multiGems = 0;
                     alertCostR1Triggered = false; // Сбрасываем триггер для следующего круга
                     closeModal('rebirth-modal');
                     updateUI();
