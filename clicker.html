@@ -305,10 +305,12 @@
             </button>
         </div>
 
-                <footer>
-            <button class="nav-btn shop-btn" onclick="openModal('shop-modal')">Магазин</button>
-            <button class="nav-btn rebirth-nav-btn" onclick="openModal('rebirth-modal')">Перерождения</button>
-            <button class="nav-btn" style="background: #444;" onclick="saveGame(true)">💾</button>
+                <footer style="flex-direction: column;">
+            <div style="display: flex; gap: 15px; width: 100%;">
+                <button class="nav-btn shop-btn" onclick="openModal('shop-modal')">Магазин</button>
+                <button class="nav-btn rebirth-nav-btn" onclick="openModal('rebirth-modal')">Перерождения</button>
+            </div>
+            <button class="nav-btn" style="background: #444; margin-top: 10px; font-size: 12px; padding: 10px;" onclick="manualSave()">Сохранить прогресс</button>
         </footer>
 
         <div id="shop-modal" class="modal">
@@ -414,16 +416,18 @@
             }, 3000);
         }
 
-                                function saveGame(showToast = false) {
+                                function saveGame() {
             const dataToSave = JSON.stringify(gameState);
             tg.CloudStorage.setItem('kirik_save', dataToSave, (err, res) => {
                 if (err) {
                     console.error("Save failed", err);
-                    if (showToast) showNotification("Ошибка сохранения!");
-                } else {
-                    if (showToast) showNotification("Прогресс сохранен!", "info");
                 }
             });
+        }
+
+        function manualSave() {
+            saveGame();
+            showNotification("Прогресс сохранен в облако!", "info");
         }
 
         function loadGame() {
