@@ -413,19 +413,42 @@
             }, 3000);
         }
 
-                function saveGame() {
-            tg.CloudStorage.setItem('kirik_save', JSON.stringify(gameState), (err, res) => {
-                if (err) console.error("Save failed", err);
+                        function saveGame() {
+            const dataToSave = JSON.stringify(gameState);
+            console.log("Saving to CloudStorage:", dataToSave);
+            tg.CloudStorage.setItem('kirik_save', dataToSave, (err, res) => {
+                if (err) {
+                    console.error("Save failed", err);
+                } else {
+                    console.log("Save successful:", res);
+                }
             });
         }
 
         function loadGame() {
             tg.CloudStorage.getItem('kirik_save', (err, val) => {
-                if (!err && val) {
+                if (err) {
+                    console.error("Load failed", err);
+                    updateUI();
+                    return;
+                }
+                if (val) {
                     try {
+                        console.log("Loaded from CloudStorage:", val);
                         const parsed = JSON.parse(val);
-                        gameState = { ...gameState, ...parsed };
-                    } catch (e) { console.error("Parse error", e); }
+                        // Полное обновление стейта, чтобы гарантировать наличие всех полей
+                        gameState = {
+                            coins: parsed.coins || 0,
+                            mortis: parsed.mortis || 0,
+                            shelly: parsed.shelly || 0,
+                            r1: parsed.r1 || 0,
+                            r2: parsed.r2 || 0,
+                            extraRebirthBonusR1: parsed.extraRebirthBonusR1 || 0,
+                            extraRebirthBonusR2: parsed.extraRebirthBonusR2 || 0
+                        };
+                    } catch (e) { 
+                        console.error("Parse error", e); 
+                    }
                 }
                 updateUI();
             });
